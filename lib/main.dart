@@ -46,7 +46,7 @@ class _MyHomePageState extends State<MyHomePage> {
             title: Text('Zip stuff'),
             trailing:Icon(Icons.arrow_forward),
             onTap: () {
-              Navigator.pop(context);
+              //Navigator.pop(context);
               Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => ZipiingRoute()),);

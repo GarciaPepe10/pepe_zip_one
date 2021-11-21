@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:english_words/english_words.dart';
+import 'package:archive/archive_io.dart';
 import 'dart:io';
+import 'package:path/path.dart';
 
 class ZipiingRoute extends StatefulWidget {
 
@@ -18,10 +19,11 @@ class _ZipiingRouteState extends State<ZipiingRoute > {
   bool _isLoading = false;
   bool _widgetLoaded = false;
   late Widget _textFromFile;
-
-  final _suggestions = <WordPair>[];
+  late List<File> getFiles;
+  final myController = TextEditingController();
   final _biggerFont = const TextStyle(fontSize: 18.0);
-  _StatefulWidgetDemoState() {
+  final _littleFont = const TextStyle(fontSize: 7.0);
+  _fillListFiles() {
     _buildSuggestions().then((val) => setState(() {
       _textFromFile = val;
       _widgetLoaded = true;
@@ -37,19 +39,11 @@ class _ZipiingRouteState extends State<ZipiingRoute > {
       ),
       body: Column(
           children: <Widget>[
-            ListTile(
-              leading:Image.asset('assets/images/zip.png'),
-              title: Text('chose the origen'),
-              trailing:Icon(Icons.arrow_forward),
-              onTap: () {
-                _selectFolder();
-              },
-            ),
             Padding(
               padding: const EdgeInsets.only(top: 60.0),
               child: Center(
                 child: Container(
-                    width: 200,
+                    width: 400,
                     height: 250,
                     /*decoration: BoxDecoration(
                         color: Colors.red,
@@ -59,7 +53,7 @@ class _ZipiingRouteState extends State<ZipiingRoute > {
                       title: Text('chose the origen'),
                       trailing:Icon(Icons.arrow_forward),
                       onTap: () {
-                        _StatefulWidgetDemoState();
+                        _fillListFiles();
                       },
                     )
                 ),
@@ -80,6 +74,7 @@ class _ZipiingRouteState extends State<ZipiingRoute > {
               },
             ),
             TextField(
+              controller: myController,
               decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'name of the  zip archive',
@@ -90,7 +85,7 @@ class _ZipiingRouteState extends State<ZipiingRoute > {
               title: Text('Zip stuff'),
               trailing:Icon(Icons.arrow_forward),
               onTap: () {
-
+                _zipFiles();
               },
             ),
             ]
@@ -129,14 +124,11 @@ class _ZipiingRouteState extends State<ZipiingRoute > {
   }
 
   Future<Widget> _buildSuggestions() async  {
-    List<File> getFiles =  await _pickFilesToZip();
+    getFiles =  await _pickFilesToZip();
     return ListView.builder(
         padding: const EdgeInsets.all(16.0),
-        itemBuilder: /*1*/ (context, i) {
-          if (i.isOdd) return const Divider(); /*2*/
-
-          final index = i ~/ 2; /*3*/
-          
+        itemCount: getFiles.length,
+        itemBuilder: (context, i) {
           return _buildRow(getFiles[i]);
         });
   }
@@ -145,7 +137,7 @@ class _ZipiingRouteState extends State<ZipiingRoute > {
     return ListTile(
       title: Text(
         file.path,
-        style: _biggerFont,
+        style: _littleFont,
       ),
     );
   }
@@ -162,5 +154,25 @@ class _ZipiingRouteState extends State<ZipiingRoute > {
     }
 
     return files;
+  }
+
+  void _zipFiles(){
+    final zippedFilePath = zipFile(zipFileSavePath:_directoryPath ?? "",zipFileName: myController.text,fileToZips:getFiles);
+  }
+  String zipFile({
+    required String zipFileSavePath,
+    required String zipFileName,
+    required List<File> fileToZips,
+  }) {
+    final ZipFileEncoder encoder = ZipFileEncoder();
+    // Manually create a zip at the zipFilePath
+    final String zipFilePath = join(zipFileSavePath, zipFileName);
+    encoder.create(zipFilePath);
+    // Add all the files to the zip file
+    for (final File fileToZip in fileToZips) {
+      encoder.addFile(fileToZip);
+    }
+    encoder.close();
+    return zipFilePath;
   }
 }
