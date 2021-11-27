@@ -5,14 +5,14 @@ import 'package:archive/archive_io.dart';
 import 'dart:io';
 import 'package:path/path.dart';
 
-class ZipiingRoute extends StatefulWidget {
+class UnZipiingRoute extends StatefulWidget {
 
   @override
-  _ZipiingRouteState createState() => _ZipiingRouteState();
+  _UnZipiingRouteState createState() => _UnZipiingRouteState();
 }
 
 
-class _ZipiingRouteState extends State<ZipiingRoute > {
+class _UnZipiingRouteState extends State<UnZipiingRoute > {
 
   String? _directoryPath;
   bool _userAborted = false;
@@ -35,7 +35,7 @@ class _ZipiingRouteState extends State<ZipiingRoute > {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text("Zipping Files"),
+        title: Text("UnZipping Files"),
       ),
       body: Column(
           children: <Widget>[
@@ -49,7 +49,7 @@ class _ZipiingRouteState extends State<ZipiingRoute > {
                         color: Colors.red,
                         borderRadius: BorderRadius.circular(50.0)),*/
                     child: _widgetLoaded?_textFromFile:ListTile(
-                      leading:Image.asset('assets/images/file.png'),
+                      leading:Image.asset('assets/images/zip.png'),
                       title: Text('chose the origen'),
                       trailing:Icon(Icons.arrow_forward),
                       onTap: () {
@@ -73,26 +73,21 @@ class _ZipiingRouteState extends State<ZipiingRoute > {
                 _selectFolder();
               },
             ),
-            TextField(
-              controller: myController,
-              decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'name of the  zip archive',
-                  hintText: 'put the name of the zip archive'),
-            ),
             ListTile(
-              leading:Image.asset('assets/images/zip.png'),
-              title: Text('Zip stuff'),
+              leading:Image.asset('assets/images/uncompress.png'),
+              title: Text('UnZip stuff'),
               trailing:Icon(Icons.arrow_forward),
               onTap: () {
-                _zipFiles();
+                _UnZipFiles();
               },
             ),
             ]
       )
     );
   }
-
+  void _UnZipFiles(){
+    final zippedFilePath = _UnZipFile(extractToPath:_directoryPath ?? "",zipFile:getFiles[0]);
+  }
   void _selectFolder() async {
     _resetState();
     try {
@@ -124,7 +119,7 @@ class _ZipiingRouteState extends State<ZipiingRoute > {
   }
 
   Future<Widget> _buildSuggestions() async  {
-    getFiles =  await _pickFilesToZip();
+    getFiles =  await _pickFilesToUnZip();
     return ListView.builder(
         padding: const EdgeInsets.all(16.0),
         itemCount: getFiles.length,
@@ -143,8 +138,8 @@ class _ZipiingRouteState extends State<ZipiingRoute > {
   }
 
 
-  Future<List<File>> _pickFilesToZip() async{
-    FilePickerResult? result = await FilePicker.platform.pickFiles(allowMultiple: true);
+  Future<List<File>> _pickFilesToUnZip() async{
+    FilePickerResult? result = await FilePicker.platform.pickFiles(allowMultiple: false);
     List<File> files;
     if (result != null) {
       files = result.paths.map((path) => File(path ?? "")).toList();
@@ -156,23 +151,26 @@ class _ZipiingRouteState extends State<ZipiingRoute > {
     return files;
   }
 
-  void _zipFiles(){
-    final zippedFilePath = zipFile(zipFileSavePath:_directoryPath ?? "",zipFileName: myController.text,fileToZips:getFiles);
-  }
-  String zipFile({
-    required String zipFileSavePath,
-    required String zipFileName,
-    required List<File> fileToZips,
-  }) {
-    final ZipFileEncoder encoder = ZipFileEncoder();
-    // Manually create a zip at the zipFilePath
-    final String zipFilePath = join(zipFileSavePath, zipFileName);
-    encoder.create(zipFilePath);
-    // Add all the files to the zip file
-    for (final File fileToZip in fileToZips) {
-      encoder.addFile(fileToZip);
+  Future<void> _UnZipFile({
+    required File zipFile,
+    required String extractToPath,
+  }) async {
+    // Read the Zip file from disk.
+    final bytes = await zipFile.readAsBytes();
+    // Decode the Zip file
+    final Archive archive = ZipDecoder().decodeBytes(bytes);
+    // Extract the contents of the Zip archive to extractToPath.
+    for (final ArchiveFile file in archive) {
+      final String filename = file.name;
+      if (file.isFile) {
+        final data = file.content as List<int>;
+        File('$extractToPath/$filename')
+          ..createSync(recursive: true)
+          ..writeAsBytesSync(data);
+
+      } else {// it should be a directory
+        Directory('$extractToPath/$filename').create(recursive: true);
+      }
     }
-    encoder.close();
-    return zipFilePath;
   }
 }

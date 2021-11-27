@@ -8,6 +8,7 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:ext_storage/ext_storage.dart';
 import 'package:pepe_zip_one/screens/ziping_files_route.dart';
+import 'package:pepe_zip_one/screens/unziping_files_route.dart';
 
 
 void main() => runApp(MyApp());
@@ -53,11 +54,13 @@ class _MyHomePageState extends State<MyHomePage> {
             },
           ),
           ListTile(
-            leading:Image.asset('assets/images/zip.png'),
+            leading:Image.asset('assets/images/uncompress.png'),
             title: Text('UnZip stuff'),
             trailing:Icon(Icons.arrow_forward),
             onTap: () {
-
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => UnZipiingRoute()),);
             },
           ),
           Text('pepe zip tool'),
@@ -138,8 +141,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 // ...
                 // Then close the drawer
                 Navigator.pop(context);
-
-
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => SettingsRoute()),
