@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:archive/archive_io.dart';
 import 'dart:io';
 import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ZipiingRoute extends StatefulWidget {
 
@@ -23,6 +24,13 @@ class _ZipiingRouteState extends State<ZipiingRoute > {
   final myController = TextEditingController();
   final _biggerFont = const TextStyle(fontSize: 18.0);
   final _littleFont = const TextStyle(fontSize: 7.0);
+  Future<bool>? googleAccount;
+  Future<bool>? dropboxAccount;
+
+  _ZipiingRouteState(){
+    notAsyncThereIsGoogleAccount();
+    notAsyncThereIsDropBoxAccount();
+  }
   _fillListFiles() {
     _buildSuggestions().then((val) => setState(() {
       _textFromFile = val;
@@ -37,7 +45,8 @@ class _ZipiingRouteState extends State<ZipiingRoute > {
       appBar: AppBar(
         title: Text("Zipping Files"),
       ),
-      body: Column(
+      body: SingleChildScrollView(
+      child:Column(
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.only(top: 60.0),
@@ -60,7 +69,6 @@ class _ZipiingRouteState extends State<ZipiingRoute > {
               ),
             ),
 
-
             _directoryPath != null ?ListTile(
               title: const Text('Directory path'),
               subtitle: Text(_directoryPath!),
@@ -72,6 +80,40 @@ class _ZipiingRouteState extends State<ZipiingRoute > {
               onTap: () {
                 _selectFolder();
               },
+            ),
+            FutureBuilder<bool>(
+                future: googleAccount,
+                builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+                  if (snapshot.data == false) {
+                    return SizedBox.shrink();
+                  } else {
+                    return ListTile(
+                        leading:Image.asset('assets/images/Google-Drive-icon.png'),
+                        title: Text('chose the destination'),
+                        trailing:Icon(Icons.arrow_forward),
+                        onTap: () {
+                          _fillListFiles();
+                        }
+                    );
+                  }
+                }
+            ),
+            FutureBuilder<bool>(
+                future: dropboxAccount,
+                builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+                  if (snapshot.data == false) {
+                    return SizedBox.shrink();
+                  } else {
+                    return ListTile(
+                        leading:Image.asset('assets/images/Dropbox-Icon.png'),
+                        title: Text('chose the destination'),
+                        trailing:Icon(Icons.arrow_forward),
+                        onTap: () {
+                          _fillListFiles();
+                        }
+                    );
+                  }
+                }
             ),
             TextField(
               controller: myController,
@@ -86,11 +128,13 @@ class _ZipiingRouteState extends State<ZipiingRoute > {
               trailing:Icon(Icons.arrow_forward),
               onTap: () {
                 _zipFiles();
+                _showToast(context);
+
               },
             ),
             ]
       )
-    );
+    ));
   }
 
   void _selectFolder() async {
@@ -174,5 +218,37 @@ class _ZipiingRouteState extends State<ZipiingRoute > {
     }
     encoder.close();
     return zipFilePath;
+  }
+
+  void _showToast(BuildContext context) {
+    final scaffold = ScaffoldMessenger.of(context);
+    scaffold.showSnackBar(
+      SnackBar(
+        content: const Text('done'),
+      ),
+    );
+  }
+  void notAsyncThereIsGoogleAccount(){
+    googleAccount = _thereIsGoogleAccount();
+  }
+  Future<bool> _thereIsGoogleAccount() async {
+    final prefs = await SharedPreferences.getInstance();
+    final user = prefs.getString('google_user') ?? "";
+    if(user != "")
+      return true;
+    else
+      return false;
+  }
+
+  void notAsyncThereIsDropBoxAccount(){
+    dropboxAccount = _thereIsDropBoxAccount();
+  }
+  Future<bool> _thereIsDropBoxAccount() async {
+    final prefs = await SharedPreferences.getInstance();
+    final user = prefs.getString('dropbox_user') ?? "";
+    if(user != "")
+      return true;
+    else
+      return false;
   }
 }

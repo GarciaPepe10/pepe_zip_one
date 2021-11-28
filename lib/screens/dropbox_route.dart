@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DropBoxRoute extends StatefulWidget {
 
@@ -7,6 +8,12 @@ class DropBoxRoute extends StatefulWidget {
 }
 
 class _DropBoxRouteState extends State<DropBoxRoute > {
+
+  final myUserController = TextEditingController();
+  final myPasswordController = TextEditingController();
+  _DropBoxRouteState(){
+    _readCredentials();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,6 +40,7 @@ class _DropBoxRouteState extends State<DropBoxRoute > {
               //padding: const EdgeInsets.only(left:15.0,right: 15.0,top:0,bottom: 0),
               padding: EdgeInsets.symmetric(horizontal: 15),
               child: TextField(
+                controller: myUserController,
                 decoration: InputDecoration(
                     border: OutlineInputBorder(),
                     labelText: 'Email',
@@ -44,7 +52,7 @@ class _DropBoxRouteState extends State<DropBoxRoute > {
                   left: 15.0, right: 15.0, top: 15, bottom: 0),
               //padding: EdgeInsets.symmetric(horizontal: 15),
               child: TextField(
-
+                controller: myPasswordController,
                 obscureText: true,
                 decoration: InputDecoration(
                     border: OutlineInputBorder(),
@@ -62,7 +70,8 @@ class _DropBoxRouteState extends State<DropBoxRoute > {
                   color: Colors.blue, borderRadius: BorderRadius.circular(20)),
               child: TextButton(
                 onPressed: () {
-
+                  _saveCredentials();
+                  _showToast(context);
                 },
                 child: Text(
                   'Save credentials',
@@ -77,5 +86,33 @@ class _DropBoxRouteState extends State<DropBoxRoute > {
         ),
       ),
     );
+  }  _saveCredentials() async {
+
+    final prefs = await SharedPreferences.getInstance();
+// set value
+    prefs.setString('dropbox_user', myUserController.text);
+    prefs.setString('dropbox_password', myPasswordController.text);
   }
+
+  _readCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+
+// Try reading data from the counter key. If it doesn't exist, return 0.
+    final user = prefs.getString('dropbox_user') ?? "";
+    final pass = prefs.getString('dropbox_password') ?? "";
+
+    myUserController.text = user;
+    myPasswordController.text = pass;
+  }
+
+  void _showToast(BuildContext context) {
+    final scaffold = ScaffoldMessenger.of(context);
+    scaffold.showSnackBar(
+      SnackBar(
+        content: const Text('done'),
+      ),
+    );
+  }
+
+
 }

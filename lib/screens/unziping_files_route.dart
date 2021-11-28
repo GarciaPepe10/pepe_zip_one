@@ -79,6 +79,7 @@ class _UnZipiingRouteState extends State<UnZipiingRoute > {
               trailing:Icon(Icons.arrow_forward),
               onTap: () {
                 _UnZipFiles();
+                _showToast(context);
               },
             ),
             ]
@@ -172,5 +173,14 @@ class _UnZipiingRouteState extends State<UnZipiingRoute > {
         Directory('$extractToPath/$filename').create(recursive: true);
       }
     }
+  }
+
+  void _showToast(BuildContext context) {
+    final scaffold = ScaffoldMessenger.of(context);
+    scaffold.showSnackBar(
+      SnackBar(
+        content: const Text('done'),
+      ),
+    );
   }
 }
